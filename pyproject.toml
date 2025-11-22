@@ -1,0 +1,10 @@
+[project]
+name = "paperprobe"
+version = "0.1.0"
+description = "Tool to automatically generate scripts that show usage of scientific code from scientific papers"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.0.8",
+    "ruff>=0.14.6",
+]
