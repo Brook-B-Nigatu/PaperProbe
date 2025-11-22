@@ -5,6 +5,9 @@ description = "Tool to automatically generate scripts that show usage of scienti
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "dotenv>=0.9.9",
     "langchain>=1.0.8",
+    "langchain-openai>=1.0.3",
+    "langgraph>=1.0.3",
     "ruff>=0.14.6",
 ]
