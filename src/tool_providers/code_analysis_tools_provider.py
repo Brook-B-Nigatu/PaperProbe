@@ -29,7 +29,7 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 if hasattr(ast, 'unparse'):
                     try:
-                        imports.append(ast.unparse(node))
+                        imports.append(f"Line {node.lineno}: {ast.unparse(node)}")
                     except Exception:
                         pass
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -73,7 +73,7 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
             except Exception:
                 pass
 
-        sig_line = f"{indent}{def_prefix} {node.name}({args_str}){returns_str}:"
+        sig_line = f"{indent}Line {node.lineno}: {def_prefix} {node.name}({args_str}){returns_str}:"
         
         docstring = ast.get_docstring(node)
         if docstring:
@@ -107,7 +107,7 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
                     pass
         
         base_str = f"({', '.join(bases)})" if bases else ""
-        class_line = f"class {node.name}{base_str}:"
+        class_line = f"Line {node.lineno}: class {node.name}{base_str}:"
         
         docstring = ast.get_docstring(node)
         parts = decorators + [class_line]
