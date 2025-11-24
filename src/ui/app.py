@@ -5,8 +5,8 @@ import os
 from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual.containers import Container 
-from textual.widgets import Header, Footer, Static, Input, ListView, ListItem
-from mock import mock_scan_paper_for_github_links
+from textual.widgets import Header, Footer, Static, Input, ListView, ListItem, RadioSet, RadioButton, Markdown
+from mock import mock_scan_paper_for_github_links, mock_analyze_github
 
 SAMPLE_URL = "https://github.com/Brook-B-Nigatu/PaperProbe"
 ASCII_LOGO = """
@@ -59,7 +59,7 @@ class IntroScreen(Screen):
 
         # Detect pdf/paper vs github
         if re.search(r"github\.com", value, re.I):
-            # Proceed to analysis screen
+            self.app.push_screen(AnalysisScreen(url=value))
             return
 
         if value.lower().endswith(".pdf") or re.search(r"arxiv|doi|pdf", value, re.I) or value.startswith("/"):
@@ -90,16 +90,68 @@ class IntroScreen(Screen):
         self.query_one("#message").update("Input looks unknown; treating as GitHub URL for demo.")
         await asyncio.sleep(0.3)
         fake = value if value.startswith("http") else f"https://github.com/example/{value}"
-        # Proceed to analysis screen
+        self.app.push_screen(AnalysisScreen(url=fake))
 
     async def on_list_view_selected(self, event: ListView.Selected) -> None:
         item = event.item
         if hasattr(item, "data") and item.data:
             url = item.data["url"]
-            # Proceed to analysis screen
+            self.app.push_screen(AnalysisScreen(url=url))
+
+class AnalysisScreen(Screen):
+    BINDINGS = [("ctrl+b", "go_back", "Back")]
+
+    def __init__(self, url: str, **kwargs):
+        super().__init__(**kwargs)
+        self.url = url
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=False)
+        with Container(id="main"):
+            yield Static(f"Preparing analysis for: {self.url}", id="prompt")
+            yield Static("What kind of analysis do you want?", id="analysis_prompt")
+            with RadioSet(id="analysis_mode"):
+                yield RadioButton("Basic", id="basic")
+                yield RadioButton("Detailed", id="detailed")
+        yield Footer()
+
+    async def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
+        mode = event.pressed.id  
+        
+        result = await mock_analyze_github(self.url, mode)
+        
+        filename = f"paperprobe_analysis_{mode}.md"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(result['markdown'])
+        
+        self.app.push_screen(ResultScreen(markdown=result['markdown'], filename=filename, mode=mode))
+
+    def action_go_back(self) -> None:
+        self.app.pop_screen()
+
+
+class ResultScreen(Screen):
+    BINDINGS = [("ctrl+b", "go_back", "Back")]
+
+    def __init__(self, markdown: str, filename: str, mode: str, **kwargs):
+        super().__init__(**kwargs)
+        self.markdown = markdown
+        self.filename = filename
+        self.mode = mode
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=False)
+        with Container(id="main"):
+            yield Static(f"{self.mode.capitalize()} Analysis Results (saved to {self.filename})", id="prompt")
+            yield Markdown(self.markdown, id="result_view")
+        yield Footer()
+
+    def action_go_back(self) -> None:
+        self.app.pop_screen()
 
 #------------------------ App -----------------------
 class PaperProbeApp(App):
+    CSS_PATH = CSS_PATH
     TITLE = "PaperProbe"
     SUB_TITLE = "Find source code for research papers and generate sample scripts"
     BINDINGS = [("ctrl+q", "quit", "Quit"), ("ctrl+d", "toggle_dark", "Toggle Dark Mode")]
