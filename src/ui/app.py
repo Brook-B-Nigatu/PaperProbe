@@ -1,4 +1,24 @@
+import os
 from textual.app import App
+
+ASCII_LOGO = """
+██████╗  █████╗ ██████╗ ███████╗██████╗ 
+██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗
+██████╔╝███████║██████╔╝█████╗  ██████╔╝
+██╔═══╝ ██╔══██║██╔═══╝ ██╔══╝  ██╔══██╗
+██║     ██║  ██║██║     ███████╗██║  ██║
+╚═╝     ╚═╝  ╚═╝╚═╝     ╚══════╝╚═╝  ╚═╝
+██████╗ ██████╗  ██████╗ ██████╗ ███████╗
+██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔════╝
+██████╔╝██████╔╝██║   ██║██████╔╝█████╗  
+██╔═══╝ ██╔══██╗██║   ██║██╔══██╗██╔══╝  
+██║     ██║  ██║╚██████╔╝██████╔╝███████╗
+╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
+"""
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CSS_PATH = os.path.join(SCRIPT_DIR, "style.tcss")
+
 class PaperProbeApp(App):
     TITLE = "PaperProbe"
     SUB_TITLE = "Find source code for research papers and generate sample scripts"

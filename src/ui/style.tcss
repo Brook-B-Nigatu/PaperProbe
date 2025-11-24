@@ -1,0 +1,9 @@
+Screen {
+    background: $surface;
+    color: $text;
+}
+
+#main {
+    height: 100%;
+    overflow: hidden;
+}
