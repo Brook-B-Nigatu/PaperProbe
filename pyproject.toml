@@ -11,5 +11,6 @@ dependencies = [
     "langchain-openai>=1.0.3",
     "langgraph>=1.0.3",
     "pdfminer-six>=20251107",
+    "pipreqs>=0.5.0",
     "ruff>=0.14.6",
 ]

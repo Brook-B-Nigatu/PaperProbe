@@ -6,10 +6,10 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
     def __init__(self, base_dir: str):
         self.base_dir = base_dir
     
-    def get_signatures(self, file_path: str) -> str:
+    def get_imports_and_signatures(self, file_path: str) -> str:
         """
-        Parses a python file and returns a string containing the signatures of classes and functions,
-        including their docstrings.
+        Parses a python file and returns a string containing the imports in the file, as well as signatures 
+        of classes and functions, including their docstrings.
         """
         full_path = os.path.join(self.base_dir, file_path) if not os.path.isabs(file_path) else file_path
         
@@ -23,14 +23,27 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
         except Exception as e:
             return f"Error parsing file {file_path}: {str(e)}"
             
+        imports = []
         results = []
         for node in tree.body:
-            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if isinstance(node, (ast.Import, ast.ImportFrom)):
+                if hasattr(ast, 'unparse'):
+                    try:
+                        imports.append(ast.unparse(node))
+                    except Exception:
+                        pass
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 results.append(self._format_function(node))
             elif isinstance(node, ast.ClassDef):
                 results.append(self._format_class(node))
-                
-        return "\n\n".join(results)
+        
+        parts = []
+        if imports:
+            parts.append("\n".join(imports))
+        if results:
+            parts.append("\n\n".join(results))
+            
+        return "\n\n".join(parts)
 
     def _format_function(self, node, indent_level=0) -> str:
         indent = "    " * indent_level

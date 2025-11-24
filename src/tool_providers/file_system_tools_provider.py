@@ -1,5 +1,5 @@
 import os
-from src.tool_providers.tool_provider_base import ToolProviderBase
+from .tool_provider_base import ToolProviderBase
 
 class FileSystemToolsProvider(ToolProviderBase):
 
