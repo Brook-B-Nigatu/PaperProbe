@@ -25,8 +25,10 @@ class FileSystemToolsProvider(ToolProviderBase):
             return f"Error: '{path}' is not a directory."
 
         output = []
+        skip_dirs = {'.git', '__pycache__', '.venv', '.github'}
         
         for root, dirs, files in os.walk(target_dir):
+            dirs[:] = [d for d in dirs if d not in skip_dirs]
             rel_path = os.path.relpath(root, target_dir)
             
             rel_path_base = os.path.relpath(root, self.base_dir)
@@ -37,9 +39,12 @@ class FileSystemToolsProvider(ToolProviderBase):
             for d in dirs:
                 output.append(f"[DIR] {prefix}{d}")
             for f in files:
-                with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
-                    line_count = sum(1 for _ in file)
-                output.append(f"[FILE] {prefix}{f} ({line_count} lines)")
+                try:
+                    with open(os.path.join(root, f), 'r', encoding='utf-8') as file:
+                        line_count = sum(1 for _ in file)
+                    output.append(f"[FILE] {prefix}{f} ({line_count} lines)")
+                except Exception as e:
+                    continue
             
             if rel_path != ".":
                 dirs[:] = []
