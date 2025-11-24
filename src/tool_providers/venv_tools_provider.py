@@ -94,7 +94,7 @@ class VenvToolsProvider(ToolProviderBase):
             else:
                 # Generate requirements.txt using pipreqs
                 subprocess.run(
-                    [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force"], 
+                    [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force", "--ignore", self.venv_path], 
                     cwd=self.base_dir, 
                     check=True
                 )
