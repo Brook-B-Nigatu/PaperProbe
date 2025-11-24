@@ -5,7 +5,7 @@ import asyncio
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 async def mock_scan_paper_for_github_links(source: str) -> List[dict]:
-    await asyncio.sleep(1.0)
+    await asyncio.sleep(3.0)
     results = [{
         "url":         "https://github.com/example/research-code",
         "recommended": True,

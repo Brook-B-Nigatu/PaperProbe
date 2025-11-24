@@ -2,6 +2,7 @@ import asyncio
 import re
 import os
 
+from textual import work
 from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual.containers import Container 
@@ -43,7 +44,7 @@ class IntroScreen(Screen):
     async def action_use_sample(self) -> None:
         inp = self.query_one(Input)
         inp.value = SAMPLE_URL
-        self.query_one("#message").update(f"Sample path populated: {SAMPLE_URL}")
+        self.query_one("#message").update(f"Sample url populated: {SAMPLE_URL}")
 
     async def on_input_submitted(self, event: Input.Submitted) -> None:
         await self.handle_submit()
@@ -73,17 +74,8 @@ class IntroScreen(Screen):
             
             results_list = self.query_one("#results_list")
             results_list.clear()
-            links = await mock_scan_paper_for_github_links(value)
-            for idx, L in enumerate(links, start=1):
-                label = f"{idx}. {L['url']}"
-                if L.get("recommended"):
-                    label += " [b][i](RECOMMENDED)[/b][/i]"
-                item = ListItem(Static(label), id=f"item-{idx}")
-                item.data = L
-                await results_list.append(item)
-
-            self.query_one("#message").update("Select a GitHub link (use arrows + Enter).")
-            results_list.focus()
+            results_list.loading = True
+            self.load_github_links(value, results_list)
             return
 
         # Unknown input
@@ -98,12 +90,30 @@ class IntroScreen(Screen):
             url = item.data["url"]
             self.app.push_screen(AnalysisScreen(url=url))
 
+    @work
+    async def load_github_links(self, value: str, results_list: ListView) -> None:
+        links = await mock_scan_paper_for_github_links(value)
+        for idx, L in enumerate(links, start=1):
+            label = f"{idx}. {L['url']}"
+            if L.get("recommended"):
+                label += " [b][i](RECOMMENDED)[/b][/i]"
+            item = ListItem(Static(label), id=f"item-{idx}")
+            item.data = L
+            await results_list.append(item)
+        
+        results_list.loading = False
+        self.query_one("#message").update("Select a GitHub link (use arrows + Enter).")
+        results_list.focus()
+
 class AnalysisScreen(Screen):
-    BINDINGS = [("ctrl+b", "go_back", "Back")]
+    BINDINGS = [("ctrl+b", "go_back", "Back"), ("ctrl+f", "fullscreen", "View Fullscreen")]
 
     def __init__(self, url: str, **kwargs):
         super().__init__(**kwargs)
         self.url = url
+        self.current_markdown = None
+        self.current_filename = None
+        self.current_mode = None
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
@@ -113,21 +123,46 @@ class AnalysisScreen(Screen):
             with RadioSet(id="analysis_mode"):
                 yield RadioButton("Basic", id="basic")
                 yield RadioButton("Detailed", id="detailed")
+            yield Markdown("... waiting for project analysis ...", id="result_view")
         yield Footer()
 
     async def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
-        mode = event.pressed.id  
-        
+        mode = event.pressed.id
+        self.query_one("#analysis_prompt").update(f"Loading {mode} analysis...")
+        result_view = self.query_one("#result_view", Markdown)
+        result_view.loading = True
+        self.load_analysis(mode)
+
+    def action_go_back(self) -> None:
+        self.app.pop_screen()
+
+    def action_fullscreen(self) -> None:
+        if self.current_markdown is not None:
+            self.app.push_screen(ResultScreen(
+                markdown=self.current_markdown,
+                filename=self.current_filename,
+                mode=self.current_mode
+            ))
+        else:
+            self.query_one("#analysis_prompt").update("Please select an analysis mode first.")
+
+    @work
+    async def load_analysis(self, mode: str) -> None:
         result = await mock_analyze_github(self.url, mode)
         
         filename = f"paperprobe_analysis_{mode}.md"
         with open(filename, "w", encoding="utf-8") as f:
             f.write(result['markdown'])
         
-        self.app.push_screen(ResultScreen(markdown=result['markdown'], filename=filename, mode=mode))
-
-    def action_go_back(self) -> None:
-        self.app.pop_screen()
+        result_view = self.query_one("#result_view", Markdown)
+        await result_view.update(result['markdown'])
+        result_view.loading = False
+        self.query_one("#prompt").update(f"{mode.capitalize()} Analysis Results (saved to {filename})")
+        self.query_one("#analysis_prompt").update("Analysis complete! Press Ctrl+F for fullscreen view.")
+        
+        self.current_markdown = result['markdown']
+        self.current_filename = filename
+        self.current_mode = mode
 
 
 class ResultScreen(Screen):
