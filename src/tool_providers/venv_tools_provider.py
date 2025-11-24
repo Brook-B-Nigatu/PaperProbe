@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 import venv
+import tempfile
 from .tool_provider_base import ToolProviderBase
 
 class VenvToolsProvider(ToolProviderBase):
@@ -24,7 +25,9 @@ class VenvToolsProvider(ToolProviderBase):
             python_executable = os.path.join(venv_full_path, "bin", "python")
         
         # Write the script code to a temporary file
-        script_file = os.path.join(self.base_dir, "temp_script.py")
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", dir=self.base_dir, delete=False, encoding="utf-8") as temp_script:
+            script_file = temp_script.name
+            
         with open(script_file, "w", encoding="utf-8") as f:
             f.write(script_code)
         
