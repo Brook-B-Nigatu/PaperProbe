@@ -1,0 +1,58 @@
+Screen {
+    background: $surface;
+    color: $text;
+}
+
+#main {
+    height: 100%;
+    overflow: hidden;
+}
+
+#logo {
+    padding: 1 2;
+    text-align: center;
+    color: #cba6f7; 
+}
+
+#prompt {
+    padding: 1 2;
+    text-align: center;
+    color: $text-muted;
+}
+
+#analysis_prompt {
+    padding: 1 2;
+    text-align: center;
+}
+
+#input {
+    width: 100%;
+    align-horizontal: center;
+    padding: 0 1;
+}
+
+Button {
+    padding: 1 2;
+    margin: 1 2;
+}
+
+#message {
+    padding: 1 2;
+    color: $accent;
+}
+
+#results_list {
+    height: 1fr;
+    margin: 0 2;
+}
+
+ListView > ListItem {
+    padding: 0 1;
+}
+
+#result_view {
+    padding: 1 2;
+    border: round $primary;
+    height: 1fr;
+    overflow: auto;
+}
