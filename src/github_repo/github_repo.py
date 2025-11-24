@@ -13,4 +13,7 @@ class GitHubRepo:
             authed_url = self.repo_url.replace("https://", f"https://{self.github_token}@")
         else:
             authed_url = self.repo_url
-        Repo.clone_from(authed_url, destination_path)
+        Repo.clone_from(authed_url, os.path.join(destination_path, self.get_repo_name()))
+
+    def get_repo_name(self) -> str:
+        return self.repo_url.replace("https://github.com/", "").rstrip("/").split("/")[-1]
