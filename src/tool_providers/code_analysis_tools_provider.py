@@ -7,9 +7,25 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
         self.base_dir = base_dir
     
     def get_imports_and_signatures(self, file_path: str) -> str:
-        """
-        Parses a python file and returns a string containing the imports in the file, as well as signatures 
-        of classes and functions, including their docstrings.
+        """Summarize imports, functions, and classes in a Python file.
+
+        Use this tool to quickly understand the public surface of a
+        module when deciding how to call it from the example script.
+
+        The result contains:
+        - All import statements with line numbers.
+        - Function and method signatures (including decorators and
+          return annotations when available).
+        - Class definitions with their base classes.
+        - Inline docstrings for functions and classes when present.
+
+        Args:
+            file_path: Path to the ``.py`` file, relative to the
+                repository root (or absolute).
+
+        Returns:
+            A human-readable text summary with line numbers that you
+            can use to locate definitions with other tools.
         """
         full_path = os.path.join(self.base_dir, file_path) if not os.path.isabs(file_path) else file_path
         

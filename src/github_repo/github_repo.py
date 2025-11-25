@@ -14,6 +14,8 @@ class GitHubRepo:
         else:
             authed_url = self.repo_url
         path = os.path.join(destination_path, self.get_repo_name())
+        if (os.path.exists(path)):
+            return path
         Repo.clone_from(authed_url, path)
         return path
 

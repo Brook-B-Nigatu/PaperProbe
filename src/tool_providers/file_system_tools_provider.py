@@ -7,15 +7,27 @@ class FileSystemToolsProvider(ToolProviderBase):
         self.base_dir = base_dir
     
     def list_directory(self, path: str = "") -> str:
-        """Lists the files and directories in the given path up to a depth of 2.
-        Directories can be further explored using this tool again. Files come with
-        the number of lines in them, and they can be read using the read_file_snippet tool.
+        """List project files and folders to discover entry points.
+
+        This tool is intended to help an agent explore a cloned
+        repository when designing an example usage script.
+
+        - It lists files and directories under ``path`` (relative to the
+            repository root) up to a depth of 2.
+        - Directories are prefixed with ``[DIR]``.
+        - Files are prefixed with ``[FILE]`` and show their line count
+            in parentheses.
+        - Use this output to decide which modules or scripts to inspect
+            next with ``read_file_snippet`` or search tools.
 
         Args:
-            path: Path to the directory. Empty string means base directory.
+                path: Directory path relative to the repository root.
+                        Empty string means the repository root.
+
         Returns:
-            The list of files and directories upto a depth of 2.
-            [DIR] indicates a directory and [FILE] indicates a file.
+                A newline-separated list of entries. Each line is one of:
+                ``[DIR] relative/path`` or
+                ``[FILE] relative/path (N lines)``.
         """
         target_dir = os.path.join(self.base_dir, path)
         
@@ -55,15 +67,22 @@ class FileSystemToolsProvider(ToolProviderBase):
         return "\n".join(sorted(output, key=lambda x: x.split(" ", 2)[1].lower()))
 
     def read_file_snippet(self, file_path: str, start_line: int, end_line: int) -> str:
-        """Return numbered lines from a file between `start_line` and `end_line`.
+        """Read a portion of a file with line numbers.
+
+        Use this tool to inspect relevant sections of source files
+        (for example module docstrings, function definitions, or
+        example code) before constructing the final example script.
 
         Args:
-            file_path: Path to the file
+            file_path: Path to the file, relative to the repository
+                root.
             start_line: The starting line number (1-based).
             end_line: The ending line number (1-based, inclusive).
-        
+
         Returns:
-            Numbered lines from the file.
+            Numbered lines from the file in the format
+            ``<line_number>: <line_content>`` on each line, or a
+            human-readable error message.
         """
         target_path = os.path.join(self.base_dir, file_path)
 
@@ -99,15 +118,23 @@ class FileSystemToolsProvider(ToolProviderBase):
             return f"Error reading file: {str(e)}"
         
     def grep_search_file(self, pattern: str, file_path: str) -> str:
-        """Searches for a given string in a specific file.
+        """Search for a plain-text pattern inside a single file.
+
+        This is useful for locating functions, classes, "main" blocks,
+        or usage examples that should be mirrored in the generated
+        example script.
 
         Args:
-            pattern: The string to search for. Should be a simple string that fits in a single line.
-            file_path: The path to the file to search in.
+            pattern: The plain-text string to search for. It should fit
+                within a single line (no regular expressions).
+            file_path: Path to the file to search in, relative to the
+                repository root.
 
         Returns:
-            Line numbers and content where the pattern was found.
-            Each result is in the format: <line_number>: <line_content>
+            One match per line in the format
+            ``<line_number>: <line_content>``. If there are no matches
+            or an error occurs, a human-readable message is returned
+            instead.
         """
         target_path = os.path.join(self.base_dir, file_path)
 
@@ -132,15 +159,23 @@ class FileSystemToolsProvider(ToolProviderBase):
         return "\n".join(results)
 
     def grep_search_directory(self, pattern: str, path: str = "") -> str:
-        """Searches for a given string in all files contained within this directory.
+        """Search recursively for a plain-text pattern in many files.
+
+        Use this to find where important functions, classes, or CLI
+        entry points are defined across the repository so you can design
+        a realistic example script.
 
         Args:
-            pattern: The string to search for. Should be a simple string that fits in a single line.
-            path: The directory path to search in. Empty string means base directory.
+            pattern: The plain-text string to search for. It should fit
+                within a single line (no regular expressions).
+            path: Directory path to search in, relative to the
+                repository root. Empty string means the repository root.
 
         Returns:
-            File paths and line numbers where the pattern was found.
-            Each result is in the format: <file_path>:<line_number>: <line_content>
+            One match per line in the format
+            ``<file_path>:<line_number>: <line_content>`` relative to
+            the repository root, or a message if no matches are found or
+            an error occurs.
         """
         target_dir = os.path.join(self.base_dir, path)
 

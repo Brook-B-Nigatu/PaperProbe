@@ -66,8 +66,24 @@ def get_example_script(base_dir: str) -> str:
         venv_tools_provider.get_tool_list()
     
     script_gen_messages = [
-        SystemMessage("You are an experienced Python developer. Use the tools at your disposal carefully. Always stick to the correct formatting when using tool calls."),
-        HumanMessage("Understand the project and generate a working script that demonstrates its main functionality. Use the tools to run, validate and refine your script as much as possible. On your final response, output just the final version of the script and nothing else.")
+        SystemMessage(
+            "You are an experienced Python developer acting as a tool-using agent. "
+            "Use the available tools to explore the repository, understand its main "
+            "functionality, and iteratively build a realistic example script. "
+            "Always follow the structured-output schema and valid JSON format when "
+            "requesting tool calls."
+        ),
+        HumanMessage(
+            "Your task is to understand the repository at the given base "
+            "directory and produce a single, runnable Python example script that "
+            "demonstrates the repository's primary functionality. Since the repository might "
+            "already contain some examples, you can check for those first. Use the filesystem and "
+            "code-analysis tools to discover files, important modules, functions, and "
+            "entry points, then design a clear, self-contained script. Use the virtual-"""
+            "environment tools to run the script, diagnose "
+            "errors, and refine the script as much as possible. On your "
+            "final response, return the final version of the Python script."
+        )
     ]
 
     script = execute_agentic_task(
@@ -110,6 +126,7 @@ def basic_analysis(github_url: str) -> str:
     SUMMARY_PROMPT = f"""
     Using the following repository information, generate a markdown summary of the repository. If certain
     information is not available, omit that section from the summary. Make sure code is formatted correctly in markdown.
+    Include all available information.
 
     **Repository Information**:
     {'-' * 20}

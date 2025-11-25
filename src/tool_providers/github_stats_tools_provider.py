@@ -38,13 +38,31 @@ class GitHubStatsToolsProvider(ToolProviderBase):
             repo = self._get_repo_info()
             
             created_at = repo.created_at
-            age_days = (datetime.now() - created_at).days
-            age_years = round(age_days / 365.25, 2)
+            # Make sure we compare timezone-aware datetimes with timezone-aware now()
+            if created_at is None:
+                age_days = 0
+                age_years = 0
+            else:
+                if getattr(created_at, 'tzinfo', None):
+                    now_for_created = datetime.now(tz=created_at.tzinfo)
+                else:
+                    now_for_created = datetime.now()
+                age_days = (now_for_created - created_at).days
+                age_years = round(age_days / 365.25, 2)
 
             primary_language = repo.language or "Not specified"
 
-            last_commit_date = repo.pushed_at.strftime('%Y-%m-%d')
-            days_since_commit = (datetime.now() - repo.pushed_at).days
+            pushed_at = repo.pushed_at
+            if pushed_at is None:
+                last_commit_date = "Unknown"
+                days_since_commit = "Unknown"
+            else:
+                last_commit_date = pushed_at.strftime('%Y-%m-%d')
+                if getattr(pushed_at, 'tzinfo', None):
+                    now_for_pushed = datetime.now(tz=pushed_at.tzinfo)
+                else:
+                    now_for_pushed = datetime.now()
+                days_since_commit = (now_for_pushed - pushed_at).days
             try:
                 commit_count = repo.get_commits().totalCount
             except:

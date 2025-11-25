@@ -13,8 +13,25 @@ class VenvToolsProvider(ToolProviderBase):
         self._create_venv()
     
     def run_script(self, script_code: str) -> str:
-        """Runs a python script at the root directory and returns the output if it runs successfully, and the 
-        error message otherwise."""
+        """Execute a Python snippet in the repo's virtual environment.
+
+        Use this tool to validate that your generated example script
+        actually runs against the cloned repository.
+
+        The code is executed as a temporary ``.py`` file located at the
+        repository root using the Python interpreter from ``.venv``.
+
+        Args:
+            script_code: Complete Python source code for the script you
+                want to run. It should be self-contained and import
+                from the repository using relative or absolute imports
+                as appropriate.
+
+        Returns:
+            ``stdout`` from the script if it exits successfully.
+            If the script fails, a string starting with ``"Error:"``
+            followed by the captured error output.
+        """
 
         venv_full_path = os.path.join(self.base_dir, self.venv_path)
         
@@ -36,7 +53,8 @@ class VenvToolsProvider(ToolProviderBase):
             [python_executable, script_file],
             capture_output=True,
             text=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
+            check=False
         )
         
         # Clean up the temporary script file
@@ -48,7 +66,22 @@ class VenvToolsProvider(ToolProviderBase):
         return result.stdout
 
     def add_missing_package(self, package_name: str) -> str:
-        """Installs a missing package into the virtual environment."""
+        """Install a missing package into the repo virtual environment.
+
+        Call this when ``run_script`` fails because a third-party
+        dependency is not installed. This allows you to iteratively fix
+        import errors while refining the example script.
+
+        Args:
+            package_name: The name of the package to install, exactly as
+                you would pass it to ``pip install`` (for example
+                ``"pandas"`` or ``"numpy>=1.26"``).
+
+        Returns:
+            A success message if installation appears to have completed,
+            or a string starting with ``"Error installing package:"``
+            if ``pip`` reported a failure.
+        """
         venv_full_path = os.path.join(self.base_dir, self.venv_path)
         
         # Determine the path to the pip executable in the new venv
@@ -62,7 +95,8 @@ class VenvToolsProvider(ToolProviderBase):
             [pip_executable, "install", package_name],
             capture_output=True,
             text=True,
-            cwd=self.base_dir
+            cwd=self.base_dir,
+            check=False
         )
         
         if result.returncode != 0:
@@ -92,6 +126,7 @@ class VenvToolsProvider(ToolProviderBase):
             subprocess.run(
                 ["uv", "export", "--format", "requirements-txt", "--output-file", "requirements.txt"], 
                 cwd=self.base_dir, 
+                capture_output=True,
                 check=False
             )
         elif os.path.exists(pyproject_file):
@@ -99,6 +134,7 @@ class VenvToolsProvider(ToolProviderBase):
             subprocess.run(
                 ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"],
                 cwd=self.base_dir,
+                capture_output=True,
                 check=False
             )
         else:
@@ -106,6 +142,7 @@ class VenvToolsProvider(ToolProviderBase):
             subprocess.run(
                 [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force", "--ignore", self.venv_path], 
                 cwd=self.base_dir, 
+                capture_output=True,
                 check=False
             )
 
@@ -117,7 +154,8 @@ class VenvToolsProvider(ToolProviderBase):
             # We remove check=True so the venv creation doesn't crash entirely if it fails
             subprocess.run(
                 [pip_executable, "install", "."], 
-                cwd=self.base_dir, 
+                cwd=self.base_dir,
+                capture_output=True,
                 check=False 
             )
             
