@@ -83,31 +83,69 @@ class VenvToolsProvider(ToolProviderBase):
             pip_executable = os.path.join(venv_full_path, "bin", "pip")
             
         requirements_file = os.path.join(self.base_dir, "requirements.txt")
+        pyproject_file = os.path.join(self.base_dir, "pyproject.toml")
         uv_lock_file = os.path.join(self.base_dir, "uv.lock")
         
-        # If requirements.txt doesn't exist, try to generate it
-        if not os.path.exists(requirements_file):
-            if os.path.exists(uv_lock_file):
-                # Generate requirements.txt from uv.lock
-                subprocess.run(
-                    ["uv", "export", "--format", "requirements-txt", "--output-file", "requirements.txt"], 
-                    cwd=self.base_dir, 
-                    check=True
-                )
-            else:
-                # Generate requirements.txt using pipreqs
-                subprocess.run(
-                    [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force", "--ignore", self.venv_path], 
-                    cwd=self.base_dir, 
-                    check=True
-                )
-        
-        # Install dependencies if requirements.txt exists
-        if os.path.exists(requirements_file):
+        # Generate requirements.txt in all cases
+        if os.path.exists(uv_lock_file):
+            # Generate requirements.txt from uv.lock
             subprocess.run(
-                [pip_executable, "install", "-r", "requirements.txt"], 
+                ["uv", "export", "--format", "requirements-txt", "--output-file", "requirements.txt"], 
                 cwd=self.base_dir, 
-                check=True
+                check=False
+            )
+        elif os.path.exists(pyproject_file):
+            # Generate requirements.txt from pyproject.toml using uv
+            subprocess.run(
+                ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"],
+                cwd=self.base_dir,
+                check=False
+            )
+        else:
+            # Generate requirements.txt using pipreqs
+            subprocess.run(
+                [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force", "--ignore", self.venv_path], 
+                cwd=self.base_dir, 
+                check=False
+            )
+
+        # Handle existing requirements or pyproject files
+        if os.path.exists(requirements_file):
+            self._install_requirements_safely(pip_executable, requirements_file)
+        elif os.path.exists(pyproject_file):
+            # For pyproject.toml, we attempt to install via pip install .
+            # We remove check=True so the venv creation doesn't crash entirely if it fails
+            subprocess.run(
+                [pip_executable, "install", "."], 
+                cwd=self.base_dir, 
+                check=False 
             )
             
         return venv_full_path
+
+    def _install_requirements_safely(self, pip_executable: str, requirements_file: str):
+        """
+        Reads requirements.txt and installs packages one by one.
+        Failures are ignored so valid packages are still installed.
+        """
+        try:
+            with open(requirements_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            
+            for line in lines:
+                package = line.strip()
+                # Skip comments and empty lines
+                if not package or package.startswith("#"):
+                    continue
+                
+                # Attempt to install the individual package
+                # check=False ensures the script doesn't stop on failure
+                subprocess.run(
+                    [pip_executable, "install", package],
+                    cwd=self.base_dir,
+                    check=False,
+                    capture_output=True # Suppress output to keep console clean, or remove to see errors
+                )
+        except Exception as e:
+            # Catch file reading errors or other unforeseen issues
+            print(f"Warning: Could not process requirements file fully: {e}")

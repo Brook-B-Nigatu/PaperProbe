@@ -8,12 +8,14 @@ class GitHubRepo:
         load_dotenv()
         self.github_token = os.getenv("GITHUB_TOKEN", None)
     
-    def clone_repo(self, destination_path: str):
+    def clone_repo(self, destination_path: str) -> str:
         if self.github_token:
             authed_url = self.repo_url.replace("https://", f"https://{self.github_token}@")
         else:
             authed_url = self.repo_url
-        Repo.clone_from(authed_url, os.path.join(destination_path, self.get_repo_name()))
+        path = os.path.join(destination_path, self.get_repo_name())
+        Repo.clone_from(authed_url, path)
+        return path
 
     def get_repo_name(self) -> str:
         return self.repo_url.replace("https://github.com/", "").rstrip("/").split("/")[-1]
