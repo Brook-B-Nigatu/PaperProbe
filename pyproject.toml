@@ -16,3 +16,16 @@ dependencies = [
     "ruff>=0.14.6",
     "textual>=6.6.0",
 ]
+
+[project.scripts]
+paperprobe = "src.ui.entry_point:paperprobe"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.envs.default]
+installer = "uv"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -199,6 +199,8 @@ class PaperProbeApp(App):
     async def action_toggle_dark(self) -> None:
         self.theme = ("catppuccin-latte" if self.theme == "catppuccin-mocha" else "catppuccin-mocha")
 
+def run() -> None:
+    PaperProbeApp().run()
 
 if __name__ == "__main__":
-    PaperProbeApp().run()
+    run()
