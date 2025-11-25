@@ -8,8 +8,6 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE.txt)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Configuration](#-configuration) • [Contributing](#-contributing)
-
 </div>
 
 <div align="center">
@@ -21,10 +19,10 @@
 
 PaperProbe bridges the gap between scientific papers and their associated code repositories. It automatically:
 
-- 📄 **Scans research papers** (arXiv URLs or local PDFs) for GitHub repository links
-- 🔍 **Analyzes repositories** to understand structure, dependencies, and usage patterns
-- 🤖 **Generates usage examples** using AI-powered code analysis
-- 📊 **Provides insights** on repository statistics, code quality, and documentation
+- **Scans research papers** (arXiv URLs or local PDFs) for GitHub repository links
+- **Analyzes repositories** to understand structure, dependencies, and usage patterns
+- **Generates usage examples** using AI-powered code analysis
+- **Provides insights** on repository statistics, code quality, and documentation
 
 Perfect for researchers, developers, and students who want to quickly understand and utilize code from scientific publications.
 
@@ -77,10 +75,13 @@ cd PaperProbe
 pip install -e .
 ```
 
+> [!TIP]
+> Package version may need to be specified in some cases.
+
 ## Prerequisites
 
 - **Python**: 3.12 or higher
-- **API Keys**: OpenAI API key for AI-powered analysis
+- **API Keys**: AI API key for AI-powered analysis
 - **GitHub Token** (optional): For enhanced GitHub API access
 
 ## Configuration
