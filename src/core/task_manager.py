@@ -1,6 +1,7 @@
 from urllib.parse import urlparse
 import os
 import asyncio
+import concurrent.futures
 
 from langchain_core.messages import (HumanMessage, SystemMessage)
 
@@ -61,12 +62,32 @@ def get_example_script(base_dir: str) -> str:
     """
     fs_tools_provider = FileSystemToolsProvider(base_dir)
     code_analysis_tools_provider = CodeAnalysisToolsProvider(base_dir)
-    venv_tools_provider = VenvToolsProvider(base_dir)
 
     script_gen_tools = fs_tools_provider.get_tool_list() + \
-        code_analysis_tools_provider.get_tool_list() + \
-        venv_tools_provider.get_tool_list()
+        code_analysis_tools_provider.get_tool_list()
+
+    def get_venv_tools():
+        venv_tools_provider = VenvToolsProvider(base_dir)
+        return venv_tools_provider.get_tool_list()
     
+    # run get_tool_list with a timeout (seconds). adjust TOOL_TIMEOUT as needed.
+    TOOL_TIMEOUT = 60.0
+    venv_tools = []
+    try:
+        _ex = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        fut = _ex.submit(get_venv_tools)
+        try:
+            venv_tools = fut.result(timeout=TOOL_TIMEOUT)
+        except concurrent.futures.TimeoutError:
+            # timed out — ignore and continue with no venv tools
+            venv_tools = []
+        finally:
+            _ex.shutdown(wait=False)
+    except Exception:
+        venv_tools = []
+    
+    script_gen_tools += venv_tools
+
     script_gen_messages = [
         SystemMessage(
             "You are an experienced Python developer acting as a tool-using agent. "
@@ -81,7 +102,7 @@ def get_example_script(base_dir: str) -> str:
             "demonstrates the repository's primary functionality. Since the repository might "
             "already contain some examples, you can check for those first. Use the filesystem and "
             "code-analysis tools to discover files, important modules, functions, and "
-            "entry points, then design a clear, self-contained script. Use the virtual-"""
+            "entry points, then design a clear, self-contained script. If they are available, use the virtual-"""
             "environment tools to run the script, diagnose "
             "errors, and refine the script as much as possible. On your "
             "final response, return the final version of the Python script."
@@ -110,7 +131,7 @@ def basic_analysis(github_url: str) -> str:
 
     try:
         repo = GitHubRepo(github_url)
-        base_dir = repo.clone_repo("cloned_repos")
+        base_dir = repo.clone_repo(".")
     except Exception as e:
         return f"Error cloning repository: {str(e)}"
 

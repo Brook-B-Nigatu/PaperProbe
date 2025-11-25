@@ -1,7 +1,7 @@
-from constructor.constructor_model import ConstructorModel
+from src.constructor.constructor_model import ConstructorModel
 from langchain_core.messages import HumanMessage
 
-from constructor.tool_aware import create_tool_aware_agent
+from src.constructor.tool_aware import create_tool_aware_agent
 
 def get_chat_model():
     """Returns an instance of the chat model used in the application."""
