@@ -7,7 +7,9 @@ from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual.containers import Container 
 from textual.widgets import Header, Footer, Static, Input, ListView, ListItem, RadioSet, RadioButton, Markdown
-from mock import mock_scan_paper_for_github_links, mock_analyze_github
+from .mock import mock_scan_paper_for_github_links, mock_analyze_github
+
+from src.core.task_manager import get_github_links, basic_analysis
 
 SAMPLE_URL = "https://github.com/Brook-B-Nigatu/PaperProbe"
 ASCII_LOGO = """
@@ -92,13 +94,14 @@ class IntroScreen(Screen):
 
     @work
     async def load_github_links(self, value: str, results_list: ListView) -> None:
-        links = await mock_scan_paper_for_github_links(value)
+        # links = await mock_scan_paper_for_github_links(value)
+        links = get_github_links(value)
         for idx, L in enumerate(links, start=1):
-            label = f"{idx}. {L['url']}"
-            if L.get("recommended"):
+            label = f"{idx}. {L}"
+            if idx == 1:
                 label += " [b][i](RECOMMENDED)[/b][/i]"
             item = ListItem(Static(label), id=f"item-{idx}")
-            item.data = L
+            item.data = {"url": L}
             await results_list.append(item)
         
         results_list.loading = False

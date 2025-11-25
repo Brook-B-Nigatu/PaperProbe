@@ -2,6 +2,8 @@ import os
 from typing import List
 import asyncio
 
+from src.core.task_manager import get_github_links, basic_analysis
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 async def mock_scan_paper_for_github_links(source: str) -> List[dict]:
@@ -27,12 +29,8 @@ async def mock_scan_paper_for_github_links(source: str) -> List[dict]:
 
 
 async def mock_analyze_github(url: str, mode: str) -> dict:
-    await asyncio.sleep(1.5 if mode == "basic" else 3.0)
-
-    sample_md_path = os.path.join(SCRIPT_DIR, "sample.md") 
-    with open(sample_md_path, "r", encoding="utf-8") as f:
-        sample_md = f.read()
-
+    # await asyncio.sleep(1.5 if mode == "basic" else 3.0)
+    md = basic_analysis(url)
     return {
-        "markdown": sample_md,
+        "markdown": md,
     }
