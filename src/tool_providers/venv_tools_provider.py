@@ -86,6 +86,29 @@ class VenvToolsProvider(ToolProviderBase):
         pyproject_file = os.path.join(self.base_dir, "pyproject.toml")
         uv_lock_file = os.path.join(self.base_dir, "uv.lock")
         
+        # Generate requirements.txt in all cases
+        if os.path.exists(uv_lock_file):
+            # Generate requirements.txt from uv.lock
+            subprocess.run(
+                ["uv", "export", "--format", "requirements-txt", "--output-file", "requirements.txt"], 
+                cwd=self.base_dir, 
+                check=False
+            )
+        elif os.path.exists(pyproject_file):
+            # Generate requirements.txt from pyproject.toml using uv
+            subprocess.run(
+                ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"],
+                cwd=self.base_dir,
+                check=False
+            )
+        else:
+            # Generate requirements.txt using pipreqs
+            subprocess.run(
+                [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force", "--ignore", self.venv_path], 
+                cwd=self.base_dir, 
+                check=False
+            )
+
         # Handle existing requirements or pyproject files
         if os.path.exists(requirements_file):
             self._install_requirements_safely(pip_executable, requirements_file)
@@ -97,25 +120,6 @@ class VenvToolsProvider(ToolProviderBase):
                 cwd=self.base_dir, 
                 check=False 
             )
-        else:
-            # If requirements.txt doesn't exist, try to generate it first
-            if os.path.exists(uv_lock_file):
-                # Generate requirements.txt from uv.lock
-                subprocess.run(
-                    ["uv", "export", "--format", "requirements-txt", "--output-file", "requirements.txt"], 
-                    cwd=self.base_dir, 
-                    check=False
-                )
-            else:
-                # Generate requirements.txt using pipreqs
-                subprocess.run(
-                    [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force", "--ignore", self.venv_path], 
-                    cwd=self.base_dir, 
-                    check=False
-                )
-            # Now try to install dependencies if requirements.txt was successfully generated
-            if os.path.exists(requirements_file):
-                self._install_requirements_safely(pip_executable, requirements_file)
             
         return venv_full_path
 

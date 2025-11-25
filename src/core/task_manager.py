@@ -1,4 +1,5 @@
 from urllib.parse import urlparse
+import os
 
 from langchain_core.messages import (HumanMessage, SystemMessage)
 
@@ -86,6 +87,39 @@ def basic_analysis(github_url: str) -> str:
     base_dir = repo.clone_repo("cloned_repos")
 
     example_script = get_example_script(base_dir)
+    github_stats_tools_provider = GitHubStatsToolsProvider(github_url)
 
+    req_file = os.path.join(base_dir, "requirements.txt")
+    if (os.path.exists(req_file)):
+        with open(req_file, "r", encoding="utf-8") as f:
+            required_packages = f.read()
+    else:
+        required_packages = "No requirements.txt found."
+
+    basic_info = github_stats_tools_provider.get_basic_info()
+    issues_summary = github_stats_tools_provider.get_issues_summary()
+    top_contributors = github_stats_tools_provider.get_top_contributors()
+
+    SUMMARY_PROMPT = f"""
+    Using the following repository information, generate a markdown summary of the repository. If certain
+    information is not available, omit that section from the summary. Make sure code is formatted correctly in markdown.
+
+    **Repository Information**:
+    {'-' * 20}
+    {basic_info}
+    {issues_summary}
+    {top_contributors}
+    {'-' * 20}
+    **Required Packages**:
+    {'-' * 20}
+    {required_packages}
+    {'-' * 20}
+    **Example Script of Usage**:
+    {'-' * 20}
+    {example_script}
+    {'-' * 20}
+"""
+    summary = call_llm(SUMMARY_PROMPT)
+    return summary
     
 
