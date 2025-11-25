@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 import os
+import asyncio
 
 from langchain_core.messages import (HumanMessage, SystemMessage)
 
@@ -10,6 +11,12 @@ from src.tool_providers.file_system_tools_provider import FileSystemToolsProvide
 from src.tool_providers.code_analysis_tools_provider import CodeAnalysisToolsProvider
 from src.tool_providers.venv_tools_provider import VenvToolsProvider
 from src.tool_providers.github_stats_tools_provider import GitHubStatsToolsProvider
+
+async def async_get_github_links(pdf_path: str) -> list[str]:
+    return await asyncio.to_thread(get_github_links, pdf_path)
+
+async def async_basic_analysis(github_url: str) -> str:
+    return await asyncio.to_thread(basic_analysis, github_url)
 
 def get_github_links(pdf_path: str) -> list[str]:
     """Extract GitHub links from a PDF file.

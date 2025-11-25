@@ -7,9 +7,7 @@ from textual.app import App, ComposeResult
 from textual.screen import Screen
 from textual.containers import Container 
 from textual.widgets import Header, Footer, Static, Input, ListView, ListItem, RadioSet, RadioButton, Markdown
-from .mock import mock_scan_paper_for_github_links, mock_analyze_github
-
-from src.core.task_manager import get_github_links, basic_analysis
+from .controller import scan_paper_for_github_links, analyze_github
 
 SAMPLE_URL = "https://github.com/Brook-B-Nigatu/PaperProbe"
 ASCII_LOGO = """
@@ -94,8 +92,8 @@ class IntroScreen(Screen):
 
     @work
     async def load_github_links(self, value: str, results_list: ListView) -> None:
-        # links = await mock_scan_paper_for_github_links(value)
-        links = get_github_links(value)
+        links = await scan_paper_for_github_links(value)
+
         for idx, L in enumerate(links, start=1):
             label = f"{idx}. {L}"
             if idx == 1:
@@ -151,7 +149,7 @@ class AnalysisScreen(Screen):
 
     @work
     async def load_analysis(self, mode: str) -> None:
-        result = await mock_analyze_github(self.url, mode)
+        result = await analyze_github(self.url, mode)
         
         filename = f"paperprobe_analysis_{mode}.md"
         with open(filename, "w", encoding="utf-8") as f:
