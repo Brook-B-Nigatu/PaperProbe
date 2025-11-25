@@ -37,8 +37,10 @@ def get_github_links(pdf_path: str) -> list[str]:
     Links:
     {'\n'.join(github_links)}
     """
-    response = call_llm(RANKING_PROMPT)
-    print(response)
+    try:
+        response = call_llm(RANKING_PROMPT)
+    except Exception as e:
+        response = ""
     
     for i in range(len(github_links)):
         if github_links[i] in response:
@@ -106,10 +108,17 @@ def basic_analysis(github_url: str) -> str:
     if not github_url.startswith("https://"):
         github_url = "https://" + github_url
 
-    repo = GitHubRepo(github_url)
-    base_dir = repo.clone_repo("cloned_repos")
+    try:
+        repo = GitHubRepo(github_url)
+        base_dir = repo.clone_repo("cloned_repos")
+    except Exception as e:
+        return f"Error cloning repository: {str(e)}"
 
-    example_script = get_example_script(base_dir)
+    try:
+        example_script = get_example_script(base_dir)
+    except Exception as e:
+        example_script = f"Error generating example script: {str(e)}"
+
     github_stats_tools_provider = GitHubStatsToolsProvider(github_url)
 
     req_file = os.path.join(base_dir, "requirements.txt")
@@ -143,7 +152,10 @@ def basic_analysis(github_url: str) -> str:
     {example_script}
     {'-' * 20}
 """
-    summary = call_llm(SUMMARY_PROMPT)
-    return summary
+    try:
+        summary = call_llm(SUMMARY_PROMPT)
+        return summary
+    except Exception as e:
+        return f"LLM error during summary generation: {str(e)}"
     
 

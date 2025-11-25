@@ -13,7 +13,6 @@ class PDFParser:
     def _download_pdf(self) -> str:
         """Downloads the PDF from the given URL and returns the local file path."""
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmpf:
-            print(f"Downloading PDF from {self.pdf_path} to {tmpf.name}")
             with urllib.request.urlopen(self.pdf_path) as response, open(tmpf.name, 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
             self.pdf_path = tmpf.name
