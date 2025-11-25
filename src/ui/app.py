@@ -64,7 +64,7 @@ class IntroScreen(Screen):
             return
 
         if value.lower().endswith(".pdf") or re.search(r"arxiv|doi|pdf", value, re.I) or value.startswith("/"):
-            self.query_one("#message").update("Scanning paper for GitHub links (mock)...")
+            self.query_one("#message").update("Scanning paper for GitHub links ...")
             
             main = self.query_one("#main")
             if not self.query("#results_list"):
@@ -199,6 +199,8 @@ class PaperProbeApp(App):
     async def action_toggle_dark(self) -> None:
         self.theme = ("catppuccin-latte" if self.theme == "catppuccin-mocha" else "catppuccin-mocha")
 
+def run() -> None:
+    PaperProbeApp().run()
 
 if __name__ == "__main__":
-    PaperProbeApp().run()
+    run()
