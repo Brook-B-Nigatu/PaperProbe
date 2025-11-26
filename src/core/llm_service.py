@@ -3,6 +3,8 @@ from langchain_core.messages import HumanMessage
 
 from src.constructor.tool_aware import create_tool_aware_agent
 
+from src.core.Logger import Logger
+
 def get_chat_model():
     """Returns an instance of the chat model used in the application."""
     return ConstructorModel()
@@ -29,7 +31,11 @@ def execute_agentic_task(tools: list, messages: list) -> str:
     Returns:
         str: The final response from the agent after executing the task.
     """
-    model = get_chat_model()
+    try:
+        model = get_chat_model()
+    except Exception:
+        Logger.log("Failed to initialize the chat model. Please make sure you've set the necessary environment variables.")
+        return ""
     agent = create_tool_aware_agent(
         model=model,
         tools=tools

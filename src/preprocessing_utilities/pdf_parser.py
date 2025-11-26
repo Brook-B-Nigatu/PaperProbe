@@ -3,7 +3,7 @@ import urllib.request
 import shutil
 import re
 
-from pdfminer.high_level import extract_text as extract_pdf_text
+import pymupdf
 
 class PDFParser:
     def __init__(self, pdf_path: str, is_url: bool = True):
@@ -20,8 +20,11 @@ class PDFParser:
         
     def _extract_text(self, pdf_path: str) -> str:
         """Extracts text from the given PDF file path."""
-        text = extract_pdf_text(pdf_path)
-        return text
+        with pymupdf.open(pdf_path) as doc:
+            text = ""
+            for page in doc:
+                text += page.get_text() + '\n\n'
+            return text
     
     def extract_github_links(self) -> set['str']:
         """Extracts GitHub links from the given text."""

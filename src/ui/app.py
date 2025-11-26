@@ -5,9 +5,12 @@ import os
 from textual import work
 from textual.app import App, ComposeResult
 from textual.screen import Screen
-from textual.containers import Container 
+from textual.containers import Container
+from textual.reactive import reactive 
 from textual.widgets import Header, Footer, Static, Input, ListView, ListItem, RadioSet, RadioButton, Markdown
 from .controller import scan_paper_for_github_links, analyze_github
+
+from src.core.Logger import Logger
 
 SAMPLE_URL = "https://github.com/Brook-B-Nigatu/PaperProbe"
 ASCII_LOGO = """
@@ -109,6 +112,8 @@ class IntroScreen(Screen):
 class AnalysisScreen(Screen):
     BINDINGS = [("ctrl+b", "go_back", "Back"), ("ctrl+f", "fullscreen", "View Fullscreen")]
 
+    display_output = reactive("... waiting for project analysis ...")
+
     def __init__(self, url: str, **kwargs):
         super().__init__(**kwargs)
         self.url = url
@@ -124,14 +129,20 @@ class AnalysisScreen(Screen):
             with RadioSet(id="analysis_mode"):
                 yield RadioButton("Basic", id="basic")
                 yield RadioButton("Detailed", id="detailed")
-            yield Markdown("... waiting for project analysis ...", id="result_view")
+            yield Markdown(self.display_output, id="result_view")
         yield Footer()
+
+    def watch_display_output(self, display_output: str) -> None:
+        try:
+            self.query_one("#result_view", Markdown).update(display_output)
+        except Exception:
+            pass
 
     async def on_radio_set_changed(self, event: RadioSet.Changed) -> None:
         mode = event.pressed.id
         self.query_one("#analysis_prompt").update(f"Loading {mode} analysis...")
         result_view = self.query_one("#result_view", Markdown)
-        result_view.loading = True
+        result_view.loading = False
         self.load_analysis(mode)
 
     def action_go_back(self) -> None:
@@ -149,6 +160,7 @@ class AnalysisScreen(Screen):
 
     @work
     async def load_analysis(self, mode: str) -> None:
+        Logger.screen = self
         result = await analyze_github(self.url, mode)
         
         filename = f"paperprobe_analysis_{mode}.md"
@@ -156,7 +168,7 @@ class AnalysisScreen(Screen):
             f.write(result['markdown'])
         
         result_view = self.query_one("#result_view", Markdown)
-        await result_view.update(result['markdown'])
+        self.display_output = result['markdown']
         result_view.loading = False
         self.query_one("#prompt").update(f"{mode.capitalize()} Analysis Results (saved to {filename})")
         self.query_one("#analysis_prompt").update("Analysis complete! Press Ctrl+F for fullscreen view.")

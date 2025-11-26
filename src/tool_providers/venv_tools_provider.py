@@ -5,6 +5,8 @@ import venv
 import tempfile
 from .tool_provider_base import ToolProviderBase
 
+from src.core.Logger import Logger
+
 class VenvToolsProvider(ToolProviderBase):
     
     def __init__(self, base_dir: str):
@@ -32,7 +34,7 @@ class VenvToolsProvider(ToolProviderBase):
             If the script fails, a string starting with ``"Error:"``
             followed by the captured error output.
         """
-
+        Logger.log(f"[Tool Call]: Running script in virtual environment:\n{script_code}")
         venv_full_path = os.path.join(self.base_dir, self.venv_path)
         
         # Determine the path to the python executable in the new venv
@@ -61,6 +63,7 @@ class VenvToolsProvider(ToolProviderBase):
         os.remove(script_file)
         
         if result.returncode != 0:
+            Logger.log(f"Script execution failed with error: {result.stderr.strip()}")
             return f"Error: {result.stderr}"
         
         return result.stdout
@@ -82,6 +85,7 @@ class VenvToolsProvider(ToolProviderBase):
             or a string starting with ``"Error installing package:"``
             if ``pip`` reported a failure.
         """
+        Logger.log(f"[Tool Call]: Installing package '{package_name}' in virtual environment.")
         venv_full_path = os.path.join(self.base_dir, self.venv_path)
         
         # Determine the path to the pip executable in the new venv
@@ -123,14 +127,16 @@ class VenvToolsProvider(ToolProviderBase):
         # Generate requirements.txt in all cases
         if os.path.exists(uv_lock_file):
             # Generate requirements.txt from uv.lock
+            Logger.log("uv.lock found. Generating requirements.txt from uv.lock using uv.")
             subprocess.run(
-                ["uv", "export", "--format", "requirements-txt", "--output-file", "requirements.txt"], 
+                ["uv", "export", "--format", "requirements-txt", "--no-hashes", "--output-file", "requirements.txt"], 
                 cwd=self.base_dir, 
                 capture_output=True,
                 check=False
             )
         elif os.path.exists(pyproject_file):
             # Generate requirements.txt from pyproject.toml using uv
+            Logger.log("pyproject.toml found. Generating requirements.txt from pyproject.toml using uv.")
             subprocess.run(
                 ["uv", "pip", "compile", "pyproject.toml", "-o", "requirements.txt"],
                 cwd=self.base_dir,
@@ -139,6 +145,7 @@ class VenvToolsProvider(ToolProviderBase):
             )
         else:
             # Generate requirements.txt using pipreqs
+            Logger.log("No requirements.txt or pyproject.toml found. Generating requirements.txt using pipreqs.")
             subprocess.run(
                 [sys.executable, "-m", "pipreqs.pipreqs", ".", "--force", "--ignore", self.venv_path], 
                 cwd=self.base_dir, 
@@ -148,6 +155,7 @@ class VenvToolsProvider(ToolProviderBase):
 
         # Handle existing requirements or pyproject files
         if os.path.exists(requirements_file):
+            Logger.log("Installing packages from requirements.txt...")
             self._install_requirements_safely(pip_executable, requirements_file)
         elif os.path.exists(pyproject_file):
             # For pyproject.toml, we attempt to install via pip install .

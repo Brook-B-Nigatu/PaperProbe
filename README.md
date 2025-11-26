@@ -11,7 +11,7 @@
 </div>
 
 <div align="center">
-  <img src="tui.jpg" alt="PaperProbe TUI Screenshot" width="800px">
+  <img src="tui.svg" alt="PaperProbe TUI Screenshot" width="800px">
   <p><em>Beautiful terminal user interface for analyzing scientific repositories</em></p>
 </div>
 

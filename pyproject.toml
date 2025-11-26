@@ -1,6 +1,6 @@
 [project]
 name = "paperprobe"
-version = "0.1.2"
+version = "0.2.0"
 description = "Tool to automatically generate scripts that show usage of scientific code from scientific papers"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -10,9 +10,9 @@ dependencies = [
     "langchain>=1.0.8",
     "langchain-openai>=1.0.3",
     "langgraph>=1.0.3",
-    "pdfminer-six>=20251107",
     "pipreqs>=0.5.0",
     "pygithub>=2.1.1",
+    "pymupdf>=1.26.6",
     "ruff>=0.14.6",
     "textual>=6.6.0",
 ]

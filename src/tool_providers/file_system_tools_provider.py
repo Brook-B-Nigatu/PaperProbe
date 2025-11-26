@@ -1,6 +1,8 @@
 import os
 from .tool_provider_base import ToolProviderBase
 
+from src.core.Logger import Logger
+
 class FileSystemToolsProvider(ToolProviderBase):
 
     def __init__(self, base_dir: str):
@@ -29,6 +31,7 @@ class FileSystemToolsProvider(ToolProviderBase):
                 ``[DIR] relative/path`` or
                 ``[FILE] relative/path (N lines)``.
         """
+        Logger.log(f"[Tool Call]: Listing directory at path '{path}'.")
         target_dir = os.path.join(self.base_dir, path)
         
         if not os.path.exists(target_dir):
@@ -84,6 +87,7 @@ class FileSystemToolsProvider(ToolProviderBase):
             ``<line_number>: <line_content>`` on each line, or a
             human-readable error message.
         """
+        Logger.log(f"[Tool Call]: Reading file snippet from '{file_path}' lines {start_line}-{end_line}.")
         target_path = os.path.join(self.base_dir, file_path)
 
         if not os.path.exists(target_path):
@@ -136,6 +140,7 @@ class FileSystemToolsProvider(ToolProviderBase):
             or an error occurs, a human-readable message is returned
             instead.
         """
+        Logger.log(f"[Tool Call]: Grep searching for pattern '{pattern}' in file '{file_path}'.")
         target_path = os.path.join(self.base_dir, file_path)
 
         if not os.path.exists(target_path):
@@ -177,6 +182,7 @@ class FileSystemToolsProvider(ToolProviderBase):
             the repository root, or a message if no matches are found or
             an error occurs.
         """
+        Logger.log(f"[Tool Call]: Grep searching for pattern '{pattern}' in directory '{path}'.")
         target_dir = os.path.join(self.base_dir, path)
 
         if not os.path.exists(target_dir):

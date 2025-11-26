@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from .tool_provider_base import ToolProviderBase
 
+from src.core.Logger import Logger
 
 class GitHubStatsToolsProvider(ToolProviderBase):
     def __init__(self, repo_url: str):
@@ -34,6 +35,7 @@ class GitHubStatsToolsProvider(ToolProviderBase):
         languages, popularity metrics, activity info, last commit date, contributors, documentation, 
         license, and health status. This is the primary tool for getting repository overview."""
         
+        Logger.log(f"Fetching repository metadata")
         try:
             repo = self._get_repo_info()
             
@@ -107,7 +109,8 @@ class GitHubStatsToolsProvider(ToolProviderBase):
     def get_issues_summary(self) -> str:
         """Get a summary of open issues including count and whether any are critical. 
         Returns a formatted string with open issue count and critical issue indicators."""
-
+        
+        Logger.log(f"Fetching issues summary")
         try:
             repo = self._get_repo_info()
             
@@ -149,6 +152,7 @@ class GitHubStatsToolsProvider(ToolProviderBase):
         """Get the top 5 contributors to the repository by commit count. Returns a formatted 
         string with top contributor usernames and their contribution counts."""
 
+        Logger.log(f"Fetching top contributors")
         try:
             repo = self._get_repo_info()
             count = 5

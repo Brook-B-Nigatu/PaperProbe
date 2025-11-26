@@ -2,6 +2,8 @@ import ast
 import os
 from .tool_provider_base import ToolProviderBase
 
+from src.core.Logger import Logger
+
 class CodeAnalysisToolsProvider(ToolProviderBase):
     def __init__(self, base_dir: str):
         self.base_dir = base_dir
@@ -27,6 +29,7 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
             A human-readable text summary with line numbers that you
             can use to locate definitions with other tools.
         """
+        Logger.log(f"[Tool Call]: Analysing file {file_path} for imports and signatures.")
         full_path = os.path.join(self.base_dir, file_path) if not os.path.isabs(file_path) else file_path
         
         if not os.path.exists(full_path):
@@ -37,6 +40,7 @@ class CodeAnalysisToolsProvider(ToolProviderBase):
                 source = f.read()
             tree = ast.parse(source)
         except Exception as e:
+            Logger.log(f"Error parsing file {file_path}")
             return f"Error parsing file {file_path}: {str(e)}"
             
         imports = []

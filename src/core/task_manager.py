@@ -13,6 +13,8 @@ from src.tool_providers.code_analysis_tools_provider import CodeAnalysisToolsPro
 from src.tool_providers.venv_tools_provider import VenvToolsProvider
 from src.tool_providers.github_stats_tools_provider import GitHubStatsToolsProvider
 
+from src.core.Logger import Logger
+
 async def async_get_github_links(pdf_path: str) -> list[str]:
     return await asyncio.to_thread(get_github_links, pdf_path)
 
@@ -71,15 +73,17 @@ def get_example_script(base_dir: str) -> str:
         return venv_tools_provider.get_tool_list()
     
     # run get_tool_list with a timeout (seconds). adjust TOOL_TIMEOUT as needed.
-    TOOL_TIMEOUT = 60.0
+    TOOL_TIMEOUT = 120.0
     venv_tools = []
     try:
         _ex = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         fut = _ex.submit(get_venv_tools)
         try:
+            Logger.log("Setting up virtual environment...")
             venv_tools = fut.result(timeout=TOOL_TIMEOUT)
         except concurrent.futures.TimeoutError:
             # timed out — ignore and continue with no venv tools
+            Logger.log("Virtual environment setup timed out. Continuing without venv tools...")
             venv_tools = []
         finally:
             _ex.shutdown(wait=False)
@@ -130,6 +134,7 @@ def basic_analysis(github_url: str) -> str:
         github_url = "https://" + github_url
 
     try:
+        Logger.log(f"Cloning repository from {github_url}...")
         repo = GitHubRepo(github_url)
         base_dir = repo.clone_repo(".")
     except Exception as e:
@@ -174,9 +179,10 @@ def basic_analysis(github_url: str) -> str:
     {'-' * 20}
 """
     try:
+        Logger.log("Summarizing results...")
         summary = call_llm(SUMMARY_PROMPT)
         return summary
     except Exception as e:
-        return f"LLM error during summary generation: {str(e)}"
+        return f"LLM error during summary generation. Make sure you have set the necessary environment variables."
     
 
