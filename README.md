@@ -76,11 +76,11 @@ pip install -e .
 ```
 
 > [!TIP]
-> Package version may need to be specified in some cases.
+> Package version may need to be specified. pipx install paperprobe==0.1.3
 
 ## Prerequisites
 
-- **Python**: 3.12 or higher
+- **Python**: 3.12 or higher (some dependencies don't work on Python v3.13)
 - **API Keys**: AI API key for AI-powered analysis
 - **GitHub Token** (optional): For enhanced GitHub API access
 
