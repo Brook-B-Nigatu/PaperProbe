@@ -1,14 +1,13 @@
 import os
-from typing import List
-import asyncio
 
 from src.core.task_manager import async_basic_analysis, async_get_github_links
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-async def scan_paper_for_github_links(source: str) -> List[str]:
+
+async def scan_paper_for_github_links(source: str) -> list[str]:
     results = await async_get_github_links(source)
-    
+
     return results
 
 

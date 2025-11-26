@@ -1,16 +1,27 @@
 import asyncio
-import re
 import os
+import re
 
 from textual import work
 from textual.app import App, ComposeResult
-from textual.screen import Screen
 from textual.containers import Container
-from textual.reactive import reactive 
-from textual.widgets import Header, Footer, Static, Input, ListView, ListItem, RadioSet, RadioButton, Markdown
-from .controller import scan_paper_for_github_links, analyze_github
+from textual.reactive import reactive
+from textual.screen import Screen
+from textual.widgets import (
+    Footer,
+    Header,
+    Input,
+    ListItem,
+    ListView,
+    Markdown,
+    RadioButton,
+    RadioSet,
+    Static,
+)
 
 from src.core.Logger import Logger
+
+from .controller import analyze_github, scan_paper_for_github_links
 
 SAMPLE_URL = "https://github.com/Brook-B-Nigatu/PaperProbe"
 ASCII_LOGO = """
@@ -31,6 +42,7 @@ ASCII_LOGO = """
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 CSS_PATH = os.path.join(SCRIPT_DIR, "style.tcss")
 
+
 # ----------------------- Screens -----------------------
 class IntroScreen(Screen):
     BINDINGS = [("ctrl+s", "use_sample", "Use sample url"), ("ctrl+q", "app.quit", "Quit")]
@@ -40,7 +52,10 @@ class IntroScreen(Screen):
         with Container(id="main"):
             yield Static(ASCII_LOGO, id="logo")
             yield Static("Paste a paper URL or local file path, or a GitHub repo URL.", id="prompt")
-            yield Input(placeholder="https://arxiv.org/abs/... or /path/to/paper.pdf or https://github.com/..", id="input")
+            yield Input(
+                placeholder="https://arxiv.org/abs/... or /path/to/paper.pdf or https://github.com/..",
+                id="input",
+            )
             yield Static("After scanning, choose a repo from the list.", id="message")
         yield Footer()
 
@@ -66,15 +81,19 @@ class IntroScreen(Screen):
             self.app.push_screen(AnalysisScreen(url=value))
             return
 
-        if value.lower().endswith(".pdf") or re.search(r"arxiv|doi|pdf", value, re.I) or value.startswith("/"):
+        if (
+            value.lower().endswith(".pdf")
+            or re.search(r"arxiv|doi|pdf", value, re.I)
+            or value.startswith("/")
+        ):
             self.query_one("#message").update("Scanning paper for GitHub links ...")
-            
+
             main = self.query_one("#main")
             if not self.query("#results_list"):
                 results_list = ListView(id="results_list")
                 results_list.can_focus = True
                 await main.mount(results_list)
-            
+
             results_list = self.query_one("#results_list")
             results_list.clear()
             results_list.loading = True
@@ -104,10 +123,11 @@ class IntroScreen(Screen):
             item = ListItem(Static(label), id=f"item-{idx}")
             item.data = {"url": L}
             await results_list.append(item)
-        
+
         results_list.loading = False
         self.query_one("#message").update("Select a GitHub link (use arrows + Enter).")
         results_list.focus()
+
 
 class AnalysisScreen(Screen):
     BINDINGS = [("ctrl+b", "go_back", "Back"), ("ctrl+f", "fullscreen", "View Fullscreen")]
@@ -150,11 +170,13 @@ class AnalysisScreen(Screen):
 
     def action_fullscreen(self) -> None:
         if self.current_markdown is not None:
-            self.app.push_screen(ResultScreen(
-                markdown=self.current_markdown,
-                filename=self.current_filename,
-                mode=self.current_mode
-            ))
+            self.app.push_screen(
+                ResultScreen(
+                    markdown=self.current_markdown,
+                    filename=self.current_filename,
+                    mode=self.current_mode,
+                )
+            )
         else:
             self.query_one("#analysis_prompt").update("Please select an analysis mode first.")
 
@@ -162,18 +184,22 @@ class AnalysisScreen(Screen):
     async def load_analysis(self, mode: str) -> None:
         Logger.screen = self
         result = await analyze_github(self.url, mode)
-        
+
         filename = f"paperprobe_analysis_{mode}.md"
         with open(filename, "w", encoding="utf-8") as f:
-            f.write(result['markdown'])
-        
+            f.write(result["markdown"])
+
         result_view = self.query_one("#result_view", Markdown)
-        self.display_output = result['markdown']
+        self.display_output = result["markdown"]
         result_view.loading = False
-        self.query_one("#prompt").update(f"{mode.capitalize()} Analysis Results (saved to {filename})")
-        self.query_one("#analysis_prompt").update("Analysis complete! Press Ctrl+F for fullscreen view.")
-        
-        self.current_markdown = result['markdown']
+        self.query_one("#prompt").update(
+            f"{mode.capitalize()} Analysis Results (saved to {filename})"
+        )
+        self.query_one("#analysis_prompt").update(
+            "Analysis complete! Press Ctrl+F for fullscreen view."
+        )
+
+        self.current_markdown = result["markdown"]
         self.current_filename = filename
         self.current_mode = mode
 
@@ -190,14 +216,17 @@ class ResultScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
         with Container(id="main"):
-            yield Static(f"{self.mode.capitalize()} Analysis Results (saved to {self.filename})", id="prompt")
+            yield Static(
+                f"{self.mode.capitalize()} Analysis Results (saved to {self.filename})", id="prompt"
+            )
             yield Markdown(self.markdown, id="result_view")
         yield Footer()
 
     def action_go_back(self) -> None:
         self.app.pop_screen()
 
-#------------------------ App -----------------------
+
+# ------------------------ App -----------------------
 class PaperProbeApp(App):
     CSS_PATH = CSS_PATH
     TITLE = "PaperProbe"
@@ -209,10 +238,12 @@ class PaperProbeApp(App):
         self.push_screen(IntroScreen())
 
     async def action_toggle_dark(self) -> None:
-        self.theme = ("catppuccin-latte" if self.theme == "catppuccin-mocha" else "catppuccin-mocha")
+        self.theme = "catppuccin-latte" if self.theme == "catppuccin-mocha" else "catppuccin-mocha"
+
 
 def run() -> None:
     PaperProbeApp().run()
+
 
 if __name__ == "__main__":
     run()
