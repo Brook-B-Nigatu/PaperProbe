@@ -76,7 +76,7 @@ pip install -e .
 ```
 
 > [!TIP]
-> Package version may need to be specified. pipx install paperprobe==0.1.3
+> Package version may need to be specified. pipx install paperprobe==0.2.0
 
 ## Prerequisites
 
