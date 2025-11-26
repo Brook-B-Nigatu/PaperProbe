@@ -1,0 +1,26 @@
+name: Ruff Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: ruff-action
+        uses: astral-sh/ruff-action@v3.5.1
+        with:
+          command: check
+          directory: "."
